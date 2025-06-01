@@ -1,3 +1,48 @@
+```{Functions}
+####utilit functions####
+# Load necessary libraries
+
+# Define the function
+process_seurat_object <- function(seurat_obj, dims = 1:20) {
+  # Split RNA data by original identity
+  seurat_obj[["RNA"]] <- split(seurat_obj[["RNA"]], f = seurat_obj$orig.ident)
+  
+  # Normalize the data
+  seurat_obj <- NormalizeData(seurat_obj)
+  
+  # Find variable features
+  seurat_obj <- FindVariableFeatures(seurat_obj)
+  
+  # Run PCA
+  seurat_obj <- RunPCA(seurat_obj)
+  
+  # Integrate layers using Harmony
+  seurat_obj <- IntegrateLayers(
+    object = seurat_obj, method = HarmonyIntegration,
+    orig.reduction = "pca", new.reduction = "harmony",
+    verbose = FALSE
+  )
+  
+  # Find neighbors using the specified dimensions
+  seurat_obj <- FindNeighbors(seurat_obj, reduction = "harmony", dims = dims)
+  
+  # Find clusters
+  seurat_obj <- FindClusters(seurat_obj, resolution = 0.5, cluster.name = "harmonyT_clusters")
+  
+  # Run UMAP
+  seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = dims, reduction.name = "umapT.harmony")
+  
+  # Join layers
+  seurat_obj <- JoinLayers(seurat_obj)
+  
+  return(seurat_obj)
+}
+
+# Example usage
+# PBMC_healthy <- process_seurat_object(PBMC_healthy, dims = 1:20)
+```
+
+
 # Define the directories for your 10X data
 # Load necessary libraries
 library(Seurat)
