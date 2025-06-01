@@ -1,0 +1,192 @@
+# Define the directories for your 10X data
+# Load necessary libraries
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+
+# Define the directories for your 10X data
+data_dirs <- c(
+    hw1 = "/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/healthy/hw1/sample_filtered_feature_bc_matrix/",
+    hw2 = "/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/healthy/hw2/sample_filtered_feature_bc_matrix/",
+    hw3 = "/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/healthy/hw3/sample_filtered_feature_bc_matrix/",
+    hw4 = "/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/healthy/hw4/sample_filtered_feature_bc_matrix/"
+)
+
+# Function to process each Seurat object
+process_sample <- function(data_dir, project_name) {
+    # Create Seurat object
+    seurat_obj <- CreateSeuratObject(counts = Read10X(data.dir = data_dir), project = project_name)
+    
+    # Calculate percentage of mitochondrial genes
+    seurat_obj[["percent.mt"]] <- PercentageFeatureSet(seurat_obj, pattern = "^MT-")
+    
+    # Plot and filter based on mitochondrial content and feature count
+    seurat_obj@meta.data %>% 
+        ggplot(aes(percent.mt, nFeature_RNA)) +
+        geom_bin_2d(bins = 500, show.legend = FALSE) +
+        scale_y_log10(label = function(x) format(x, scientific = FALSE)) +
+        scale_fill_viridis_c(trans = "log2") +
+        labs(x = "% mitochondrial genes", y = "Genes/cell") +
+        annotate("rect", xmin = 0, xmax = 10, ymin = 1000, ymax = Inf,
+                 fill = "red", alpha = 0.05) +
+        annotate("text", x = 20, y = 6000, label = "High quality cells",
+                 color = "pink") +
+        theme_bw()
+    
+    # Subset the Seurat object
+    seurat_obj <- subset(seurat_obj, nFeature_RNA >= 1000 & percent.mt <= 10)
+    
+    return(seurat_obj)
+}
+
+# Process each sample
+A1 <- process_sample(data_dirs["hw1"], "PRA3_healthy_hw1")
+A2 <- process_sample(data_dirs["hw2"], "PRA3_healthy_hw2")
+A3 <- process_sample(data_dirs["hw3"], "PRA3_healthy_hw3")
+A4 <- process_sample(data_dirs["hw4"], "PRA3_healthy_hw4")
+
+# Print the number of cells in each object
+print(paste("Number of cells in A1:", ncol(A1)))
+print(paste("Number of cells in A2:", ncol(A2)))
+print(paste("Number of cells in A3:", ncol(A3)))
+print(paste("Number of cells in A4:", ncol(A4)))
+
+# Merge all Seurat objects into one
+scRNA <- merge(A1, y = c(A2, A3, A4), project = "pra3_healthy")
+
+PBMC_healthy <- JoinLayers(scRNA)
+PBMC_healthy <- NormalizeData(scRNA)
+PBMC_healthy <- FindVariableFeatures(PBMC_healthy)
+PBMC_healthy <- ScaleData(PBMC_healthy)
+PBMC_healthy<- RunPCA(PBMC_healthy)
+PBMC_healthy <- IntegrateLayers(
+  object = PBMC_healthy, method = HarmonyIntegration,
+  orig.reduction = "pca", new.reduction = "harmony",
+  verbose = FALSE
+)
+PBMC_healthy <- FindNeighbors(PBMC_healthy, reduction = "harmony", dims = 1:30)
+PBMC_healthy <- FindClusters(PBMC_healthy, resolution = 0.5, cluster.name = "harmonyT_clusters")
+PBMC_healthy <- RunUMAP(PBMC_healthy, reduction = "harmony", dims = 1:30, reduction.name = "umapT.harmony")
+PBMC_healthy <- JoinLayers(PBMC_healthy)
+
+####CleanupCD4####
+a <- subset(PBMC_healthy, idents = as.character(setdiff(0:19, c(15, 16))))
+a <- process_seurat_object(a, dims = 1:30)
+a <- JoinLayers(a)
+saveRDS(a,"/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/PBMC_T_healthy.rds")
+####CD4####
+a<-readRDS("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/PBMC_T_healthy.rds")
+CD4clusters<-c("0","1","7","9","11","13","15")
+a <- subset(a, subset = CD4 >0 | Idents(a) %in% CD4clusters)
+a <- process_seurat_object(a, dims = 1:10)
+cluster.ids <- c("CD4Tn_B","CD4Tn_B","CD4Th217em_B","CD4Tn_B","CD4Th1_B","CD4Tcm_B","CD4Th1em_B","CD4Treg_B","CD4Tn_B") 
+names(cluster.ids) <- levels(a)
+a<- RenameIdents(a, cluster.ids)
+a$rename_celltype<-Idents(a)
+PBMC_CD4<-a
+#7 Tre
+#6 Th1em
+#4 Th1
+#2 Th2Tem
+#5 Tcm
+#3 Tn
+#0 Tn
+#1 Tn
+#8 Tn
+####CD8####
+PBMC<-readRDS("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/PBMC_T_healthy.rds")
+CD4clusters<-c("0","1","7","9","11","13","15")
+a <- subset(PBMC, subset = CD4 >0 | Idents(PBMC) %in% CD4clusters)
+cells_in_a <- WhichCells(a)
+CD8 <- subset(PBMC, cells = setdiff(Cells(PBMC), cells_in_a))
+CD8 <- process_seurat_object(CD8, dims = 1:15)
+#4,13 MAIT
+#1,9,10,12 TCRgd
+#14 Pro
+#3,5,7 Tn
+#2 Tcm
+a <- subset(CD8, idents = as.character(setdiff(0:13, c(1,12,9,10))))
+a <- process_seurat_object(a, dims = 1:15)
+cluster.ids <- c("CD8Tem_B","CD8act_B","MAIT_B","CD8Tcm_B","CD8act_B","CD8Tem_B","CD8act_B","CD8Tn_B","CD8act_B","CD8Tem_B","CD8Tem_B","MAIT_B") 
+names(cluster.ids) <- levels(a)
+a <- RenameIdents(a, cluster.ids)
+a$rename_celltype<-Idents(a)
+#2,11 MAIT
+#7 Tn
+#3 TCM
+#5,0,10,9 Tem
+#4,1,6,8 CD8act_B
+PBMC_CD8<-a
+merge<-merge(PBMC_CD4,PBMC_CD8)
+merge<-JoinLayers(merge)
+merge$Treatment<-"Healthy"
+#saveRDS(merge,"/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/processed_healthyT.rds")
+#saveRDS(a,"/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/processed_healthyTsc.rds")
+merge<-readRDS("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/processed_healthyT.rds")
+Tumor_PBMC<-readRDS("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/PBMC_TotalT.rds")
+total<-merge(Tumor_PBMC,merge)
+total<-JoinLayers(total)
+total <- as.SingleCellExperiment(total, assay = "RNA")
+
+
+
+
+```
+## Including Plots
+
+
+```{}
+# Load the dplyr package
+df<-Tumor_PBMC@meta.data
+library(dplyr)
+
+# Create a vector of PIDs with recurrence "Y"
+recurrence_Y <- c("3468", "3491", "3933", "3986", "4081", "4114", "4116", "4137", "4179", "4271")
+
+# Create a vector of PIDs with recurrence "NO"
+recurrence_NO <- c("606", "2236", "4815", "3856", "3880", "3959", "3962", "4083")
+
+# Add the recurrence and recurPredict columns to the dataframe
+df <- df %>%
+  mutate(
+    recurrence = case_when(
+      PID %in% recurrence_Y ~ "Y",
+      PID %in% recurrence_NO ~ "NO",
+      TRUE ~ NA_character_  # Assign NA to PIDs not in either list
+    ),
+    recurPredict = ifelse(PID %in% c(recurrence_Y, recurrence_NO), "Yes", "NO")
+  )
+
+# View the updated dataframe
+print(df)
+
+
+# Load the dplyr package
+library(dplyr)
+
+# Create a vector of PIDs for MS_sur "YES"
+ms_sur_yes <- c("606", "2236", "3468", "4815")
+
+# Create a vector of PIDs for MS_sur "NO"
+ms_sur_no <- c("3435", "3952", "447")
+
+# Add the MS_sur and MSS_analysis columns to the dataframe
+df <- df %>%
+  mutate(
+    MS_sur = case_when(
+      PID %in% ms_sur_yes ~ "YES",
+      PID %in% ms_sur_no ~ "NO",
+      TRUE ~ NA_character_  # Assign NA to PIDs not in either list
+    ),
+    MSS_analysis = ifelse(PID %in% c(ms_sur_yes, ms_sur_no), "YES", "NO")
+  )
+
+# View the updated dataframe
+print(df)
+merge$MSS_analysis <-"YES"
+merge$recurrence <- "Healthy"
+merge$recurPredict <- "Yes"
+merge$Ms_sur <- "Healthy"
+merge<-readRDS("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/processed_healthyT.rds")
+
+saveRDS(total,"/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/moreinfo_pbmc_T.rds")
