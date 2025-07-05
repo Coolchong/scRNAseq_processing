@@ -12,6 +12,8 @@ seurat_table <- ScaleData(seurat_table, assay = "HTO")
 seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
 keep <- vector(mode="logical", length=ncol(seurat_table))
 Idents(seurat_table) <- "HTO_maxID"
+RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]))
+
 
 E2_4228 <- subset(seurat_table, idents = "ID4228")
 E2_4228<- subset(E2_4228, subset = HTO_classification.global == "Singlet")
@@ -32,3 +34,47 @@ p2889_T2 <- CreateSeuratObject(counts = p2889_T2,project = "PRA3_extra")
 p2889_T2$Treatment<-"Pembrolizumab"
 p2889_T2$PID<-"2889"
 p2889_T2$Tissue<-"Tumor"
+
+MS5 <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS5/sample_filtered_feature_bc_matrix/")
+hashtag<-MS5[[2]]
+gene<-MS5[[1]]
+seurat_table <- CreateSeuratObject(counts = gene, project = "PRA3_extra")
+new_assay <- CreateAssayObject(counts=hashtag)
+seurat_table[['HTO']] <- new_assay
+seurat_table <- NormalizeData(seurat_table, assay = "HTO", normalization.method = "CLR")
+seurat_table <- ScaleData(seurat_table, assay = "HTO")
+seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
+keep <- vector(mode="logical", length=ncol(seurat_table))
+Idents(seurat_table) <- "HTO_maxID"
+RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]))
+P3435 <- subset(seurat_table, idents = "Patient1")
+P3435 <- subset(P3435, subset = HTO_classification.global == "Singlet")
+P3435$Treatment<-"Pembrolizumab"
+P3435$PID<-"3435"
+P3435$Tissue<-"Blood"
+
+P3468 <- subset(seurat_table, idents = "Patient2")
+P3468 <- subset(P3468, subset = HTO_classification.global == "Singlet")
+P3468$Treatment<-"Pembrolizumab"
+P3468$PID<-"3468"
+P3468$Tissue<-"Blood"
+
+P3856 <- subset(seurat_table, idents = "Patient3")
+P3856 <- subset(P3468, subset = HTO_classification.global == "Singlet")
+P3856$Treatment<-"Folfirinox"
+P3856$PID<-"3856"
+P3856$Tissue<-"Blood"
+
+MS13 <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS13/sample_filtered_feature_bc_matrix/")
+d_feature_bc_matrix/")
+hashtag<-MS13[[2]]
+gene<-MS13[[1]]
+seurat_table <- CreateSeuratObject(counts = gene, project = "PRA3_extra")
+new_assay <- CreateAssayObject(counts=hashtag)
+seurat_table[['HTO']] <- new_assay
+seurat_table <- NormalizeData(seurat_table, assay = "HTO", normalization.method = "CLR")
+seurat_table <- ScaleData(seurat_table, assay = "HTO")
+seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
+keep <- vector(mode="logical", length=ncol(seurat_table))
+Idents(seurat_table) <- "HTO_maxID"
+RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]))
