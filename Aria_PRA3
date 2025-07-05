@@ -17,3 +17,18 @@ E2_4228 <- subset(seurat_table, idents = "ID4228")
 E2_4228<- subset(E2_4228, subset = HTO_classification.global == "Singlet")
 p2889<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_pbmc/filtered_feature_bc_matrix/")
 p2889 <- CreateSeuratObject(counts = p2889, project = "PRA3_extra")
+p2889$PID<-"2889"
+p2889$Treatment<-"Pembrolizumab"
+p2889$Tissue<-"Blood"
+
+p2889_T<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_anterior/sample_filtered_feature_bc_matrix/")
+p2889_T <- CreateSeuratObject(counts = p2889_T,project = "PRA3_extra")
+p2889_T$Treatment<-"Pembrolizumab"
+p2889_T$PID<-"2889"
+p2889_T$Tissue<-"Tumor"
+
+p2889_T2<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_posterior/sample_filtered_feature_bc_matrix/")
+p2889_T2 <- CreateSeuratObject(counts = p2889_T2,project = "PRA3_extra")
+p2889_T2$Treatment<-"Pembrolizumab"
+p2889_T2$PID<-"2889"
+p2889_T2$Tissue<-"Tumor"
