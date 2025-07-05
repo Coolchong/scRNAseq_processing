@@ -1,2 +1,19 @@
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+E2_4228 <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/E_blood/sample_filtered_feature_bc_matrix/")
+hashtag<-E2_4228[[2]]
+gene<-E2_4228[[1]]
+seurat_table <- CreateSeuratObject(counts = gene, project = "PRA3_extra")
+new_assay <- CreateAssayObject(counts=hashtag)
+seurat_table[['HTO']] <- new_assay
+seurat_table <- NormalizeData(seurat_table, assay = "HTO", normalization.method = "CLR")
+seurat_table <- ScaleData(seurat_table, assay = "HTO")
+seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
+keep <- vector(mode="logical", length=ncol(seurat_table))
+Idents(seurat_table) <- "HTO_maxID"
 
-a<-readRDS("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/Seurat_analysis/healthy/PBMC_T_healthy.rds")
+E2_4228 <- subset(seurat_table, idents = "ID4228")
+E2_4228<- subset(E2_4228, subset = HTO_classification.global == "Singlet")
+p2889<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_pbmc/filtered_feature_bc_matrix/")
+p2889 <- CreateSeuratObject(counts = p2889, project = "PRA3_extra")
