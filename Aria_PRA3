@@ -84,7 +84,7 @@ RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]
 
 P447 <- subset(seurat_table, idents = "Patient1")
 P447 <- subset(P447, subset = HTO_classification.global == "Singlet")
-P447$Treatment<-"Pembro"
+P447$Treatment<-"Pembrolizumab"
 P447$PID<-"447_T2"
 P447$Tissue<-"Blood"
 
@@ -99,3 +99,15 @@ P4815 <- subset(P4815, subset = HTO_classification.global == "Singlet")
 P4815$Treatment<-"Treatment-naive PDAC"
 P4815$PID<-"P4815"
 P4815$Tissue<-"P4815"
+
+P3285_B <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS0_blood/sample_filtered_feature_bc_matrix/")
+P3285_B <- CreateSeuratObject(counts = P3285_B, project = "PRA3_extra")
+P3285_B$Treatment<-"Pembrolizumab"
+P3285_B$PID<-"P3285"
+P3285_B$Tissue<-"Blood"
+
+P3285_T <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS0_tumor/sample_filtered_feature_bc_matrix/")
+P3285_T <- CreateSeuratObject(counts = P3285_T, project = "PRA3_extra")
+P3285_T$Treatment<-"Pembrolizumab"
+P3285_T$PID<-"P3285"
+P3285_B$Tissue<-"Tumor"
