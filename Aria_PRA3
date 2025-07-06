@@ -92,13 +92,21 @@ P4785 <- subset(seurat_table, idents = "Patient2")
 P4785 <- subset(P4785, subset = HTO_classification.global == "Singlet")
 P4785$Treatment<-"Treatment-naive PDAC"
 P4785$PID<-"P4785"
-P4785$Tissue<-"P4785"
+P4785$Tissue<-"Blood"
 
 P4815 <- subset(seurat_table, idents = "Patient3")
 P4815 <- subset(P4815, subset = HTO_classification.global == "Singlet")
 P4815$Treatment<-"Treatment-naive PDAC"
 P4815$PID<-"P4815"
-P4815$Tissue<-"P4815"
+P4815$Tissue<-"Blood"
+
+P4785_T <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/ms12/sample_filtered_feature_bc_matrix/")
+P4785_T <- CreateSeuratObject(counts = P4785_T, project = "PRA3_extra")
+P4785_T$Treatment<-"Treatment-naive PDAC"
+P4785_T$PID<-"P4785"
+P4785_T$Tissue<-"Tumor"
+
+
 
 P3285_B <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS0_blood/sample_filtered_feature_bc_matrix/")
 P3285_B <- CreateSeuratObject(counts = P3285_B, project = "PRA3_extra")
