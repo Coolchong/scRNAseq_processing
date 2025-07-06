@@ -13,10 +13,9 @@ seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
 keep <- vector(mode="logical", length=ncol(seurat_table))
 Idents(seurat_table) <- "HTO_maxID"
 RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]))
-
-
 E2_4228 <- subset(seurat_table, idents = "ID4228")
 E2_4228<- subset(E2_4228, subset = HTO_classification.global == "Singlet")
+
 p2889<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_pbmc/filtered_feature_bc_matrix/")
 p2889 <- CreateSeuratObject(counts = p2889, project = "PRA3_extra")
 p2889$PID<-"2889"
@@ -32,7 +31,7 @@ p2889_T$Tissue<-"Tumor"
 p2889_T2<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_posterior/sample_filtered_feature_bc_matrix/")
 p2889_T2 <- CreateSeuratObject(counts = p2889_T2,project = "PRA3_extra")
 p2889_T2$Treatment<-"Pembrolizumab"
-p2889_T2$PID<-"2889"
+p2889_T2$PID<-"2889_T2"
 p2889_T2$Tissue<-"Tumor"
 
 MS5 <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS5/sample_filtered_feature_bc_matrix/")
@@ -66,7 +65,6 @@ P3856$PID<-"3856"
 P3856$Tissue<-"Blood"
 
 MS13 <- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/MS13/sample_filtered_feature_bc_matrix/")
-d_feature_bc_matrix/")
 hashtag<-MS13[[2]]
 gene<-MS13[[1]]
 seurat_table <- CreateSeuratObject(counts = gene, project = "PRA3_extra")
@@ -74,7 +72,30 @@ new_assay <- CreateAssayObject(counts=hashtag)
 seurat_table[['HTO']] <- new_assay
 seurat_table <- NormalizeData(seurat_table, assay = "HTO", normalization.method = "CLR")
 seurat_table <- ScaleData(seurat_table, assay = "HTO")
-seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
+htos_to_keep <- rownames(seurat_table[["HTO"]])[rownames(seurat_table[["HTO"]]) != "Patient4"]
+rna_features <- rownames(seurat_table[["RNA"]])
+features_to_keep <- c(rna_features, htos_to_keep)
+seurat_filtered <- seurat_table[features_to_keep, ]
+seurat_table <- HTODemux(seurat_filtered, assay = "HTO", positive.quantile = 0.99)
 keep <- vector(mode="logical", length=ncol(seurat_table))
 Idents(seurat_table) <- "HTO_maxID"
 RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]))
+
+
+P447 <- subset(seurat_table, idents = "Patient1")
+P447 <- subset(P447, subset = HTO_classification.global == "Singlet")
+P447$Treatment<-"Pembro"
+P447$PID<-"447_T2"
+P447$Tissue<-"Blood"
+
+P4785 <- subset(seurat_table, idents = "Patient2")
+P4785 <- subset(P4785, subset = HTO_classification.global == "Singlet")
+P4785$Treatment<-"Treatment-naive PDAC"
+P4785$PID<-"P4785"
+P4785$Tissue<-"P4785"
+
+P4815 <- subset(seurat_table, idents = "Patient3")
+P4815 <- subset(P4815, subset = HTO_classification.global == "Singlet")
+P4815$Treatment<-"Treatment-naive PDAC"
+P4815$PID<-"P4815"
+P4815$Tissue<-"P4815"
