@@ -16,6 +16,20 @@ RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]
 E2_4228 <- subset(seurat_table, idents = "ID4228")
 E2_4228<- subset(E2_4228, subset = HTO_classification.global == "Singlet")
 
+P4228<- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/P2/sample_filtered_feature_bc_matrix/")
+P4228 <- CreateSeuratObject(counts = P4228,project = "PRA3_extra")
+P4228<- Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/P2-2/sample_filtered_feature_bc_matrix/")
+P4228 <- CreateSeuratObject(counts = P4228,project = "PRA3_extra")
+
+#TCR
+tcr_chain_df <- read.csv("/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/E_blood/all_contig_annotations.csv", stringsAsFactors = FALSE)
+T_cell_barcodes <- Cells(E2_4228)
+tcr_chain_df <- tcr_chain_df %>% 
+    filter(productive == "true" & high_confidence == "true" &
+             barcode %in% T_cell_barcodes)
+a<-unique(tcr_chain_df$barcode)
+
+
 p2889<-Read10X(data.dir="/n/data1/dfci/cancerimm/dougan/Chong_Zuo/Aria_Jiao_merged/Extralibrary/gct_pbmc/filtered_feature_bc_matrix/")
 p2889 <- CreateSeuratObject(counts = p2889, project = "PRA3_extra")
 p2889$PID<-"2889"
@@ -119,3 +133,31 @@ P3285_T <- CreateSeuratObject(counts = P3285_T, project = "PRA3_extra")
 P3285_T$Treatment<-"Pembrolizumab"
 P3285_T$PID<-"P3285"
 P3285_B$Tissue<-"Tumor"
+
+a<-Read10X(data.dir= "/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/PRA3-EXT/outs/per_sample_outs/PRA3-EXT/count/sample_filtered_feature_bc_matrix")
+hashtag<-a[[2]]
+gene<-a[[1]]
+seurat_table <- CreateSeuratObject(counts = gene, project = "PRA3_extra")
+new_assay <- CreateAssayObject(counts=hashtag)
+seurat_table[['HTO']] <- new_assay
+seurat_table <- NormalizeData(seurat_table, assay = "HTO", normalization.method = "CLR")
+seurat_table <- ScaleData(seurat_table, assay = "HTO")
+seurat_table <- HTODemux(seurat_table, assay = "HTO", positive.quantile = 0.99)
+keep <- vector(mode="logical", length=ncol(seurat_table))
+Idents(seurat_table) <- "HTO_maxID"
+RidgePlot(seurat_table, assay = "HTO", features = rownames(seurat_table[["HTO"]]))
+P5631 <- subset(seurat_table, idents = "5631")
+P5631 <- subset(P5631, subset = HTO_classification.global == "Singlet")
+P90136 <- subset(seurat_table, idents = "90136")
+P90136 <- subset(P90136, subset = HTO_classification.global == "Singlet")
+P3856 <- subset(seurat_table, idents = "3856")
+P3856 <- subset(P3856, subset = HTO_classification.global == "Singlet")
+#check #of TCR 
+tcr_chain_df <- read.csv("/n/data1/dfci/cancerimm/dougan/PRA3_seurat_object/PRA3-EXT/outs/per_sample_outs/PRA3-EXT/vdj_t/filtered_contig_annotations.csv", stringsAsFactors = FALSE)
+T_cell_barcodes <- Cells(P3856)
+
+tcr_chain_df <- tcr_chain_df %>% 
+    filter(productive == "true" & high_confidence == "true" &
+             barcode %in% T_cell_barcodes)
+
+
